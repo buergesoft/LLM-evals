@@ -44,7 +44,7 @@ Ensure that variables are mapped correctly to avoid false analysis:
 
 ![Variable mapping](../assets/images/variable_mapping.png)
 
-That’s it. When you click `Execute`, and wait a few seconds, you should now see the scores and comments from the model in the UI:
+When you click `Execute`, and wait for a bit, you should now see the scores and comments from the model in the UI (this is a run in progress):
 
 ![Eval scores](../assets/images/eval_scores.png)
 
