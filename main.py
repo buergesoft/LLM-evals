@@ -282,6 +282,19 @@ def main():
                     if user_input.lower() in ["exit", "quit", "bye", "end"]:
                         goodbye_message = goodbye_chain.invoke({"user_id": user_id}, config={"callbacks": [langfuse_handler], "run_name": "goodbye-message"})
                         print(f"System: {goodbye_message.text}")
+
+                        feedback = input("Was this conversation helpful? (Yes/No): ")
+                        user_comment = input("Please give us a reason for your answer. This will help us improve: ")
+
+                        # Score the entire conversation session
+                        langfuse.create_score(
+                            session_id=session_id,  # The session ID used throughout the conversation
+                            name="conversation_usefulness",
+                            value=feedback,
+                            data_type="CATEGORICAL",
+                            comment=user_comment
+                        )
+
                         break
 
                     conversation.append(HumanMessage(user_input))
