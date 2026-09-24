@@ -5,7 +5,7 @@ import uuid
 
 import dotenv
 from langchain_community.docstore.document import Document
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
 from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate, PromptTemplate
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -23,7 +23,9 @@ user_id = users[uuid.uuid4().int % len(users)]
 llm = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL"),
     base_url=os.getenv("OPENAI_BASE_URL"),
-    api_key=os.getenv("OPENAI_API_KEY")
+    api_key=os.getenv("OPENAI_API_KEY"),
+    reasoning_effort="medium",
+    use_responses_api=True
 )
 
 # Initialize the embeddings model with OpenAI API credentials
@@ -183,7 +185,9 @@ def generate_context(ai_message: AIMessage) -> None:
         for tool_call in ai_message.tool_calls:
             if tool_call["name"] == "SmartphoneInfo":
                 tool_output = smartphone_info_tool.invoke(tool_call)
-                conversation.append(tool_output)
+                conversation.append(
+                    ToolMessage(content=tool_output, tool_call_id=tool_call["id"])
+                )
 
     except Exception as e:
         print(f"An error occurred while processing tool calls: {e}")
@@ -268,7 +272,7 @@ def main():
             user_input = input("User: ").strip()
             if user_input.lower() in ["exit", "quit", "bye", "end"]:
                 goodbye_message = goodbye_chain.invoke({"user_id": user_id})
-                print(f"System: {goodbye_message.content}")
+                print(f"System: {goodbye_message.text}")
                 break
 
             conversation.append(HumanMessage(user_input))
@@ -277,7 +281,7 @@ def main():
 
             response = review_chain.invoke({"user_id": user_id, "user_input": user_input, "conversation": conversation})
 
-            print(f"System: {response.content}")
+            print(f"System: {response.text}")
             conversation.append(response)
 
     except Exception as e:
