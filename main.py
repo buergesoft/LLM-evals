@@ -276,11 +276,12 @@ def main():
     try:
         print("Welcome to the Smartphone Assistant! I can help you with smartphone features and comparisons.")
         while True:
-            with langfuse.start_as_current_observation(as_type="span", name="user-query"):
+            with langfuse.start_as_current_observation(as_type="span", name="user-query") as span:
                 with propagate_attributes(session_id=session_id, user_id=user_id):
                     user_input = input("User: ").strip()
                     if user_input.lower() in ["exit", "quit", "bye", "end"]:
                         goodbye_message = goodbye_chain.invoke({"user_id": user_id}, config={"callbacks": [langfuse_handler], "run_name": "goodbye-message"})
+                        span.update(input=user_input, output=goodbye_message.text)
                         print(f"System: {goodbye_message.text}")
 
                         feedback = input("Was this conversation helpful? (Yes/No): ")
@@ -297,13 +298,13 @@ def main():
 
                         break
 
+                    span.update(input=user_input)
                     conversation.append(HumanMessage(user_input))
-
                     context_chain.invoke({"user_input": user_input, "conversation": conversation}, config={"callbacks": [langfuse_handler], "run_name": "context"})
 
                     response = review_chain.invoke({"user_id": user_id, "user_input": user_input, "conversation": conversation}, config={"callbacks": [langfuse_handler], "run_name": "final-response"})
-
                     print(f"System: {response.text}")
+                    span.update(output=response.text)
                     conversation.append(response)
 
     except Exception as e:
