@@ -284,7 +284,13 @@ def main():
                         span.update(input=user_input, output=goodbye_message.text)
                         print(f"System: {goodbye_message.text}")
 
-                        feedback = input("Was this conversation helpful? (Yes/No): ")
+                        while True:
+                            answer = input("Was this conversation helpful? (Yes/No): ").strip().lower()
+                            if answer in ("yes", "no"):
+                                feedback = answer.capitalize()
+                                break
+                            print("Please answer Yes or No.")
+
                         user_comment = input("Please give us a reason for your answer. This will help us improve: ")
 
                         # Score the entire conversation session
